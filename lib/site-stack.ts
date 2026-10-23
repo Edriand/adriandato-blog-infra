@@ -46,6 +46,7 @@ export class SiteStack extends Stack {
     });
 
     const logBucket = new s3.Bucket(this, 'LogBucket', {
+      bucketName: config.nombres.global('s3', 'logs'),
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
@@ -56,6 +57,7 @@ export class SiteStack extends Stack {
     });
 
     const routingFunction = new cloudfront.Function(this, 'Routing', {
+      functionName: config.nombres.nombre('cloudfront', 'rutas'),
       runtime: cloudfront.FunctionRuntime.JS_2_0,
       comment: 'Idioma en /, www -> apex e index.html en carpetas',
       code: cloudfront.FunctionCode.fromInline(
@@ -66,6 +68,7 @@ export class SiteStack extends Stack {
     });
 
     const headers = new cloudfront.ResponseHeadersPolicy(this, 'SecurityHeaders', {
+      responseHeadersPolicyName: config.nombres.nombre('cloudfront', 'cabeceras'),
       comment: 'Cabeceras de seguridad de adriandato.com',
       securityHeadersBehavior: {
         strictTransportSecurity: {
@@ -88,8 +91,13 @@ export class SiteStack extends Stack {
       },
     });
 
+    const originAccessControl = new cloudfront.S3OriginAccessControl(this, 'OriginAccessControl', {
+      originAccessControlName: config.nombres.nombre('cloudfront', 'oac-web'),
+    });
+
     const distribution = new cloudfront.Distribution(this, 'Distribution', {
-      comment: config.domainName,
+      // Las distribuciones no tienen nombre: el comentario sigue la misma regla
+      comment: config.nombres.nombre('cloudfront', 'web'),
       domainNames: [config.domainName, ...config.redirectDomains],
       certificate,
       minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
@@ -100,7 +108,7 @@ export class SiteStack extends Stack {
       logBucket,
       logFilePrefix: 'cloudfront/',
       defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(bucket),
+        origin: origins.S3BucketOrigin.withOriginAccessControl(bucket, { originAccessControl }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         responseHeadersPolicy: headers,

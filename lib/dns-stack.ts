@@ -24,6 +24,7 @@ export class DnsStack extends Stack {
     this.zone = route53.HostedZone.fromHostedZoneAttributes(this, 'Zone', { hostedZoneId, zoneName: domainName });
 
     this.certificate = new acm.Certificate(this, 'Certificate', {
+      certificateName: props.config.nombres.nombre('acm', 'web'),
       domainName,
       subjectAlternativeNames: redirectDomains,
       validation: acm.CertificateValidation.fromDns(this.zone),
