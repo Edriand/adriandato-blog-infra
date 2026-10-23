@@ -38,6 +38,7 @@ export class SiteStack extends Stack {
     const { config, zone, certificate } = props;
 
     const bucket = new s3.Bucket(this, 'SiteBucket', {
+      bucketName: config.siteBucketName,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,

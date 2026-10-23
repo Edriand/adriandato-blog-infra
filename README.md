@@ -14,7 +14,7 @@ navegador ──► Route 53 ──► CloudFront ──(OAC)──► S3 privad
 
 | Stack | Región | Contenido |
 | --- | --- | --- |
-| `BlogDns` | us-east-1 | Zona de Route 53 (o la existente) y certificado ACM de `adriandato.com` + `www` |
+| `BlogDns` | us-east-1 | Certificado ACM de `adriandato.com` + `www`, validado en la zona existente |
 | `BlogSite` | eu-west-1 | Bucket privado, bucket de logs, CloudFront, función de rutas, cabeceras y registros A/AAAA |
 
 `BlogSite` lee la zona y el certificado de `BlogDns` con `crossRegionReferences`.
@@ -23,18 +23,16 @@ Coste esperado: unos 0,50 $ al mes por la zona de Route 53; S3 y CloudFront qued
 
 ## Configuración
 
-| Variable | Obligatoria | Qué es |
-| --- | --- | --- |
-| `BLOG_ACCOUNT_ID` | Sí | ID de la cuenta `adriandato-blog` |
-| `BLOG_HOSTED_ZONE_ID` | No | ID de una zona ya creada (p. ej. la que crea Route 53 al registrar el dominio). Vacía = el stack crea la zona |
+Todo está en `lib/config.ts`: cuenta `216625556188`, región `eu-west-1`, dominio, zona `Z08156062W72TBWZFC7B2`, nombre del bucket (`adriandato-blog-web-<cuenta>`) y etiquetas (`proyecto=blog`, `entorno=prod`, `owner=adrian`, `gestionado-por=cdk`), que se aplican a todos los recursos con `Tags.of(app)`.
 
-El resto (dominio, región y etiquetas) está en `lib/config.ts`. Las etiquetas se aplican a todos los recursos con `Tags.of(app)`.
+- **La zona de Route 53 no la gestiona este repo.** La creó el registro del dominio; aquí solo se importa. No la crees ni la borres desde el CDK.
+- **El nombre del bucket es fijo** porque el rol de publicación de la web solo tiene permisos sobre ese bucket.
 
-## Requisitos en la cuenta (los prepara el agente de AWS)
+## Requisitos en la cuenta (los prepara el agente de AWS, ya hechos)
 
-- `cdk bootstrap` en `eu-west-1` y `us-east-1`.
-- Rol de despliegue para GitHub Actions por OIDC, que confíe en `repo:Edriand/adriandato-blog-infra:ref:refs/heads/main` y pueda asumir los roles del bootstrap de CDK.
-- En la Tag Policy, el valor `cdk` para `gestionado-por`.
+- `cdk bootstrap` en `eu-west-1` y `us-east-1` (calificador `hnb659fds`).
+- Rol `github-cdk` por OIDC, que confía en `repo:Edriand/adriandato-blog-infra:ref:refs/heads/main` y solo puede asumir los roles del bootstrap.
+- Tag Policy con el valor `cdk` para `gestionado-por`.
 
 ## GitHub Actions
 
@@ -43,18 +41,19 @@ El resto (dominio, región y etiquetas) está en `lib/config.ts`. Las etiquetas 
 | `CI` | PR y push a `main` | `tsc`, tests y `cdk synth` sin credenciales |
 | `Deploy` | Manual, desde `main` | `cdk diff` y, si eliges `deploy`, `cdk deploy --all` |
 
-Variables del repositorio (Settings → Secrets and variables → Actions → Variables): `BLOG_ACCOUNT_ID`, `CDK_DEPLOY_ROLE_ARN` y, si aplica, `BLOG_HOSTED_ZONE_ID`.
+Variable del repositorio (Settings → Secrets and variables → Actions → Variables): `CDK_DEPLOY_ROLE_ARN` = `arn:aws:iam::216625556188:role/github-cdk`. No uses `environment:` en el job: el rol no se podría asumir.
 
 ## En local
 
 ```bash
 npm ci
 npm test
-BLOG_ACCOUNT_ID=111111111111 npx cdk synth   # sin credenciales
+npx cdk synth   # sin credenciales
 aws sso login --profile adriandato-blog
-BLOG_ACCOUNT_ID=<id> npx cdk diff --profile adriandato-blog
+npx cdk diff --profile adriandato-blog
 ```
 
 ## Después del primer despliegue
 
-Las salidas de `BlogSite` (`BucketName` y `DistributionId`) van como variables del repositorio `adriandato-blog-web` para el workflow de publicación. Si la zona la crea este stack, apunta los NS del registrador a los de la zona.
+- El certificado se valida por DNS en la zona del dominio, así que **el registro del dominio tiene que haber terminado** antes del primer despliegue; si no, `BlogDns` se queda esperando la validación.
+- La salida `DistributionId` de `BlogSite` va como variable `DISTRIBUTION_ID` del repositorio `adriandato-blog-web`.

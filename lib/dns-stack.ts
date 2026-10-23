@@ -9,7 +9,7 @@ interface DnsStackProps extends StackProps {
 }
 
 /**
- * Zona de Route 53 y certificado ACM. Va en us-east-1 porque CloudFront solo
+ * Certificado ACM validado contra la zona de Route 53 del dominio. Va en us-east-1 porque CloudFront solo
  * acepta certificados de esa región.
  */
 export class DnsStack extends Stack {
@@ -20,9 +20,8 @@ export class DnsStack extends Stack {
     super(scope, id, props);
     const { domainName, redirectDomains, hostedZoneId } = props.config;
 
-    this.zone = hostedZoneId
-      ? route53.HostedZone.fromHostedZoneAttributes(this, 'Zone', { hostedZoneId, zoneName: domainName })
-      : new route53.PublicHostedZone(this, 'Zone', { zoneName: domainName });
+    // Zona creada por el registro del dominio: se importa, no se gestiona aquí
+    this.zone = route53.HostedZone.fromHostedZoneAttributes(this, 'Zone', { hostedZoneId, zoneName: domainName });
 
     this.certificate = new acm.Certificate(this, 'Certificate', {
       domainName,

@@ -57,10 +57,16 @@ test('el certificado está en us-east-1 y cubre www', () => {
     DomainName: 'adriandato.com',
     SubjectAlternativeNames: ['www.adriandato.com'],
   });
-  dns.resourceCountIs('AWS::Route53::HostedZone', 1);
 });
 
-test('reutiliza una zona existente si se indica su ID', () => {
-  const { dns } = synth({ BLOG_HOSTED_ZONE_ID: 'Z123EXAMPLE' });
+test('importa la zona del registro del dominio y nunca la crea', () => {
+  const { dns, site } = synth();
   dns.resourceCountIs('AWS::Route53::HostedZone', 0);
+  site.resourceCountIs('AWS::Route53::HostedZone', 0);
+  site.hasResourceProperties('AWS::Route53::RecordSet', { HostedZoneId: 'Z08156062W72TBWZFC7B2' });
+});
+
+test('el bucket del sitio tiene el nombre que espera el rol de publicación', () => {
+  const { site } = synth({ BLOG_ACCOUNT_ID: '216625556188' });
+  site.hasResourceProperties('AWS::S3::Bucket', { BucketName: 'adriandato-blog-web-216625556188' });
 });

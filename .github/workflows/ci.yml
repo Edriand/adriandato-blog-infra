@@ -20,7 +20,5 @@ jobs:
       - run: npm ci
       - run: npx tsc
       - run: npm test
-      # Synth sin credenciales: valida las plantillas con una cuenta ficticia
+      # Synth sin credenciales: no hay lookups, todo sale de lib/config.ts
       - run: npx cdk synth --quiet
-        env:
-          BLOG_ACCOUNT_ID: '111111111111'

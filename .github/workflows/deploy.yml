@@ -1,6 +1,7 @@
 name: Deploy
 
-# Solo manual y desde main: el rol de despliegue solo confía en la rama main.
+# Solo manual y desde main: el rol github-cdk solo confía en la rama main.
+# No uses `environment:` en el job: cambia el sub del token OIDC y el rol no se puede asumir.
 on:
   workflow_dispatch:
     inputs:
@@ -22,9 +23,6 @@ jobs:
   cdk:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    env:
-      BLOG_ACCOUNT_ID: ${{ vars.BLOG_ACCOUNT_ID }}
-      BLOG_HOSTED_ZONE_ID: ${{ vars.BLOG_HOSTED_ZONE_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
