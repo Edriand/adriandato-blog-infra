@@ -72,5 +72,5 @@ npx cdk diff --profile adriandato-blog
 
 ## Después del primer despliegue
 
-- El certificado se valida por DNS en la zona del dominio, así que **el registro del dominio tiene que haber terminado** antes del primer despliegue; si no, `BlogDns` se queda esperando la validación.
+- El certificado se valida por DNS en la zona del dominio, así que **el registro del dominio tiene que haber terminado** antes del primer despliegue; si no, `blog-pro-stack-dns` se queda esperando la validación.
 - La salida `DistributionId` de `blog-pro-stack-web` va como variable `DISTRIBUTION_ID` del repositorio `adriandato-blog-web`.
