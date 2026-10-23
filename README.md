@@ -48,7 +48,7 @@ Los nombres salen siempre del helper `lib/nombres.ts`. El test `test/nombres.tes
 ## Requisitos en la cuenta (los prepara el agente de AWS, ya hechos)
 
 - `cdk bootstrap` en `eu-west-1` y `us-east-1` (calificador `hnb659fds`).
-- Rol `github-cdk` por OIDC, que confía en `repo:Edriand/adriandato-blog-infra:ref:refs/heads/main` y solo puede asumir los roles del bootstrap.
+- Rol `blog-pro-role-github-cdk` por OIDC, que confía en `repo:Edriand/adriandato-blog-infra:ref:refs/heads/main` y solo puede asumir los roles del bootstrap (deploy, file-publishing, image-publishing y lookup) en `eu-west-1` y `us-east-1`.
 - Tag Policy con el valor `cdk` para `gestionado-por`.
 
 ## GitHub Actions
@@ -58,19 +58,22 @@ Los nombres salen siempre del helper `lib/nombres.ts`. El test `test/nombres.tes
 | `CI` | PR y push a `main` | `tsc`, tests y `cdk synth` sin credenciales |
 | `Deploy` | Manual, desde `main` | `cdk diff` y, si eliges `deploy`, `cdk deploy --all` |
 
-El workflow `Deploy` asume `arn:aws:iam::216625556188:role/github-cdk`, escrito en el propio workflow, así que no hace falta configurar variables. No uses `environment:` en el job: el rol no se podría asumir.
+El workflow `Deploy` asume `arn:aws:iam::216625556188:role/blog-pro-role-github-cdk`, escrito en el propio workflow, así que no hace falta configurar variables. No uses `environment:` en el job: el rol no se podría asumir.
 
 ## En local
+
+Mientras GitHub Actions no tenga minutos, el despliegue se hace desde tu máquina con el perfil SSO `blog-admin`:
 
 ```bash
 npm ci
 npm test
 npx cdk synth   # sin credenciales
-aws sso login --profile adriandato-blog
-npx cdk diff --profile adriandato-blog
+aws sso login --profile blog-admin
+npx cdk diff --all --profile blog-admin
+npx cdk deploy --all --profile blog-admin
 ```
 
 ## Después del primer despliegue
 
 - El certificado se valida por DNS en la zona del dominio, así que **el registro del dominio tiene que haber terminado** antes del primer despliegue; si no, `blog-pro-stack-dns` se queda esperando la validación.
-- La salida `DistributionId` de `blog-pro-stack-web` va como variable `DISTRIBUTION_ID` del repositorio `adriandato-blog-web`.
+- La salida `DistributionId` de `blog-pro-stack-web` se escribe en `DISTRIBUTION_ID` del workflow `Publicar` de `adriandato-blog-web`.
