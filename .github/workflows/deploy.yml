@@ -1,6 +1,6 @@
 name: Deploy
 
-# Solo manual y desde main: el rol github-cdk solo confía en la rama main.
+# Solo manual y desde main: el rol blog-pro-role-github-cdk solo confía en la rama main.
 # No uses `environment:` en el job: cambia el sub del token OIDC y el rol no se puede asumir.
 on:
   workflow_dispatch:
@@ -33,7 +33,7 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           # El ARN no es secreto: el rol solo confía en la rama main de este repo
-          role-to-assume: arn:aws:iam::216625556188:role/github-cdk
+          role-to-assume: arn:aws:iam::216625556188:role/blog-pro-role-github-cdk
           aws-region: eu-west-1
       - name: cdk diff
         run: npx cdk diff --all
