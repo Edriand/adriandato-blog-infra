@@ -32,7 +32,8 @@ jobs:
       - run: npm ci
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.CDK_DEPLOY_ROLE_ARN }}
+          # El ARN no es secreto: el rol solo confía en la rama main de este repo
+          role-to-assume: arn:aws:iam::216625556188:role/github-cdk
           aws-region: eu-west-1
       - name: cdk diff
         run: npx cdk diff --all

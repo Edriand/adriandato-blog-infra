@@ -41,7 +41,7 @@ Todo está en `lib/config.ts`: cuenta `216625556188`, región `eu-west-1`, domin
 | `CI` | PR y push a `main` | `tsc`, tests y `cdk synth` sin credenciales |
 | `Deploy` | Manual, desde `main` | `cdk diff` y, si eliges `deploy`, `cdk deploy --all` |
 
-Variable del repositorio (Settings → Secrets and variables → Actions → Variables): `CDK_DEPLOY_ROLE_ARN` = `arn:aws:iam::216625556188:role/github-cdk`. No uses `environment:` en el job: el rol no se podría asumir.
+El workflow `Deploy` asume `arn:aws:iam::216625556188:role/github-cdk`, escrito en el propio workflow, así que no hace falta configurar variables. No uses `environment:` en el job: el rol no se podría asumir.
 
 ## En local
 
